@@ -1,7 +1,16 @@
 // app/(tabs)/index.tsx
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
-import { useAuth } from '../../src/Contexto/GhibliContext'; // Ajusta la ruta
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Image,
+  TouchableOpacity,
+  Platform // <--- AÑADE PLATFORM AQUÍ
+} from 'react-native';
+import { useAuth } from '../../src/Contexto/GhibliContext';
 import { useRouter } from 'expo-router';
 
 export default function PeliculasScreen() {
@@ -12,7 +21,7 @@ export default function PeliculasScreen() {
     return <View style={styles.loaderContainer}><ActivityIndicator size="large" color="#81d4fa" /></View>;
   }
   if (errorFilms) {
-    return <View style={styles.loaderContainer}><Text style={styles.errorText}>Error: {errorFilms}</Text></View>;
+    return <View style={styles.loaderContainer}><Text style={styles.errorText}>Error al cargar películas: {errorFilms}</Text></View>;
   }
   if (!films || films.length === 0) {
     return <View style={styles.loaderContainer}><Text style={styles.errorText}>No se encontraron películas.</Text></View>;
@@ -27,9 +36,9 @@ export default function PeliculasScreen() {
         contentContainerStyle={styles.listContentContainer}
         ListHeaderComponent={<Text style={styles.mainTitle}>Películas Ghibli</Text>}
         renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.card} 
-            // onPress={() => router.push(`/detalle-pelicula/${item.id}`)} // Para cuando tengas la ruta de detalle
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => router.push(`/detalle-pelicula/${item.id}`)}
           >
             <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
             <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
@@ -40,25 +49,49 @@ export default function PeliculasScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#121212' },
-  listContentContainer: { paddingHorizontal: 8, paddingTop: 10, paddingBottom: 80 }, // Padding para el menú
+  listContentContainer: { paddingHorizontal: 8, paddingTop: 10, paddingBottom: 80 },
   loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212'},
-  errorText: { color: '#ff6b6b', textAlign: 'center', fontSize: 16 },
-  mainTitle: { fontSize: 28, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 20, marginTop: 15 },
+  errorText: { color: '#ff8a80', textAlign: 'center', fontSize: 16, padding: 20 },
+  mainTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+    marginTop: Platform.OS === 'ios' ? 40 : 20 // Ahora Platform está definido
+  },
   card: {
     flex: 1,
     margin: 7,
     backgroundColor: '#2a2a2a',
     borderRadius: 10,
     overflow: 'hidden',
-    elevation: 3, // Sombra para Android
-    shadowColor: '#000', // Sombra para iOS
+    elevation: 3,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
   },
-  cardImage: { width: '100%', height: 220 }, // Ajusta altura
-  cardTitle: { color: '#e0e0e0', fontSize: 15, fontWeight: '600', textAlign: 'center', paddingHorizontal: 5, paddingVertical: 10, minHeight: 50 },
-  cardYear: { color: '#a0a0a0', fontSize: 12, textAlign: 'center', paddingBottom: 10 },
+  cardImage: {
+    width: '100%',
+    height: 220,
+  },
+  cardTitle: {
+    color: '#e0e0e0',
+    fontSize: 15,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingHorizontal: 5,
+    paddingVertical: 10,
+    minHeight: 50,
+  },
+  cardYear: {
+    color: '#a0a0a0',
+    fontSize: 12,
+    textAlign: 'center',
+    paddingBottom: 10,
+  },
 });

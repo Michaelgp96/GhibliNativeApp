@@ -1,13 +1,14 @@
 // app/_layout.tsx
 import React from 'react';
-import { Stack, SplashScreen, Redirect, usePathname } from 'expo-router'; // Importar usePathname
+import { Stack, SplashScreen, Redirect, usePathname } from 'expo-router';
 import { GhibliProvider, useAuth } from '../src/Contexto/GhibliContext'; // Verifica esta ruta
+import { Platform } from 'react-native'; // Importar Platform
 
 SplashScreen.preventAutoHideAsync();
 
 function GuardedLayout() {
     const { userSession, authLoading } = useAuth();
-    const pathname = usePathname(); // Usar usePathname
+    const pathname = usePathname();
 
     React.useEffect(() => {
         if (!authLoading) {
@@ -16,29 +17,39 @@ function GuardedLayout() {
     }, [authLoading]);
 
     if (authLoading) {
-        return null; 
+        return null;
     }
 
     const inAuthRoutes = pathname === '/login' || pathname === '/registro';
 
     if (!userSession && !inAuthRoutes) {
-        // Si no hay sesión y no estamos en login/registro, redirigir a login
         return <Redirect href="/login" />;
     }
 
     if (userSession && inAuthRoutes) {
-        // Si hay sesión y estamos en login/registro, redirigir a la pantalla principal de tabs
         return <Redirect href="/(tabs)/" />;
     }
 
-    // Renderiza el Stack apropiado (o Slot si prefieres manejar Stacks en layouts anidados)
-    // Este Stack define las rutas de nivel superior.
     return (
-        <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="login" />
-            <Stack.Screen name="registro" />
-            {/* <Stack.Screen name="detalle-pelicula/[id]" options={{ headerShown: true, title: 'Detalle' }}/> */}
+        <Stack screenOptions={{
+            // headerShown: false // Puedes definirlo por pantalla si quieres
+        }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="registro" options={{ headerShown: false }} />
+            {/* --- AÑADIDO/MODIFICADO PARA EL DETALLE DE PELÍCULA --- */}
+            <Stack.Screen
+                name="detalle-pelicula/[id]"
+                options={{
+                    headerShown: true, // Queremos mostrar el header aquí
+                    title: 'Detalle', // Título por defecto, se sobrescribirá en la pantalla
+                    headerStyle: { backgroundColor: '#1c1c1c' },
+                    headerTintColor: '#e0e0e0',
+                    headerTitleStyle: { fontWeight: 'bold' },
+                    headerBackTitleVisible: Platform.OS === 'ios' ? true : false, // Muestra "Películas" en iOS
+                    headerTitleAlign: 'center',
+                }}
+            />
         </Stack>
     );
 }
