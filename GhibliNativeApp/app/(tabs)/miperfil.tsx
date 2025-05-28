@@ -1,26 +1,25 @@
 // app/(tabs)/miperfil.tsx
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '../../src/Contexto/GhibliContext'; // Ajusta la ruta
 
 export default function MiPerfilScreen() {
-  const { userSession } = useAuth(); // Para mostrar el email, por ejemplo
+  const { userSession } = useAuth(); // userSession puede ser User | null
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Mi Perfil</Text>
-      {userSession?.user?.email && (
-        <Text style={styles.emailText}>Email: {userSession.user.email}</Text>
+      <Text style={styles.title}>Mi Perfil Ghibli</Text>
+      {userSession?.email && ( // <--- CORREGIDO: Acceso directo a userSession.email
+        <Text style={styles.emailText}>Correo: {userSession.email}</Text>
       )}
-      <Text style={styles.text}>Información del perfil y contador de logins (Próximamente)</Text>
-      {/* El botón de logout está en el header definido en app/(tabs)/_layout.tsx */}
+      <Text style={styles.infoText}>Contador de logins y más información vendrá aquí.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#121212' },
-  title: { fontSize: 22, color: 'white', marginBottom: 10 },
-  emailText: { fontSize: 16, color: '#ccc', marginBottom: 20 },
-  text: { fontSize: 18, color: 'white', textAlign: 'center' },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#1c1c1c' },
+  title: { fontSize: 26, fontWeight: 'bold', color: 'white', marginBottom: 20 },
+  emailText: { fontSize: 18, color: '#e0e0e0', marginBottom: 10 },
+  infoText: { fontSize: 16, color: '#b0b0b0', textAlign: 'center' },
 });

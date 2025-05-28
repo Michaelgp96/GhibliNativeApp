@@ -1,60 +1,52 @@
 // app/_layout.tsx
 import React from 'react';
-import { Stack, SplashScreen } from 'expo-router';
-import { GhibliProvider, useAuth } from '../src/Contexto/GhibliContext'; // Ajusta la ruta si es necesario
+import { Stack, SplashScreen, Redirect, usePathname } from 'expo-router'; // Importar usePathname
+import { GhibliProvider, useAuth } from '../src/Contexto/GhibliContext'; // Verifica esta ruta
 
-// Este SplashScreen de expo-router se mostrará automáticamente mientras se carga la fuente del layout.
-// Podemos usarlo para ocultar el layout hasta que sepamos el estado de autenticación.
 SplashScreen.preventAutoHideAsync();
 
-function LayoutSelector() {
-  const authContext = useAuth();
+function GuardedLayout() {
+    const { userSession, authLoading } = useAuth();
+    const pathname = usePathname(); // Usar usePathname
 
-  if (authContext?.authLoading) {
-    // Mientras authLoading es true, SplashScreen.preventAutoHideAsync() mantendrá la
-    // pantalla de inicio nativa visible. Una vez que authLoading sea false,
-    // llamaremos a SplashScreen.hideAsync().
-    console.log("LayoutSelector: authLoading es true, esperando...");
-    return null; // No renderizar nada más hasta que la autenticación esté lista
-  }
+    React.useEffect(() => {
+        if (!authLoading) {
+            SplashScreen.hideAsync();
+        }
+    }, [authLoading]);
 
-  // Una vez que la carga de autenticación ha terminado, ocultamos la pantalla de inicio nativa.
-  SplashScreen.hideAsync();
-  console.log("LayoutSelector: authLoading es false. userSession:", authContext?.userSession);
+    if (authLoading) {
+        return null; 
+    }
 
-  // Si el usuario no está logueado, define un Stack para las pantallas de autenticación.
-  if (!authContext?.userSession) {
-    console.log("LayoutSelector: No hay sesión, mostrando Stack de Auth.");
+    const inAuthRoutes = pathname === '/login' || pathname === '/registro';
+
+    if (!userSession && !inAuthRoutes) {
+        // Si no hay sesión y no estamos en login/registro, redirigir a login
+        return <Redirect href="/login" />;
+    }
+
+    if (userSession && inAuthRoutes) {
+        // Si hay sesión y estamos en login/registro, redirigir a la pantalla principal de tabs
+        return <Redirect href="/(tabs)/" />;
+    }
+
+    // Renderiza el Stack apropiado (o Slot si prefieres manejar Stacks en layouts anidados)
+    // Este Stack define las rutas de nivel superior.
     return (
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="login" />
-        <Stack.Screen name="registro" />
-        {/* Redirige cualquier otra ruta (como index o (tabs)) a login si no está autenticado */}
-        <Stack.Screen name="index" redirect={true} href="/login" />
-        <Stack.Screen name="(tabs)" redirect={true} href="/login" />
-      </Stack>
+        <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="registro" />
+            {/* <Stack.Screen name="detalle-pelicula/[id]" options={{ headerShown: true, title: 'Detalle' }}/> */}
+        </Stack>
     );
-  }
-
-  // Si el usuario está logueado, define el Stack principal que incluye las pestañas.
-  console.log("LayoutSelector: Hay sesión, mostrando Stack principal con (tabs).");
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" /> {/* Carga el layout de las pestañas app/(tabs)/_layout.tsx */}
-      {/* Aquí podrías tener otras pantallas que se abren SOBRE las pestañas, ej. detalles */}
-      {/* <Stack.Screen name="detalle-pelicula/[id]" /> */}
-      {/* Si el usuario logueado intenta ir a login/registro, redirigir a la home de tabs */}
-      <Stack.Screen name="login" redirect={true} href="/(tabs)/" />
-      <Stack.Screen name="registro" redirect={true} href="/(tabs)/" />
-    </Stack>
-  );
 }
 
 export default function RootLayout() {
-  console.log("RootLayout: Renderizando GhibliProvider");
   return (
     <GhibliProvider>
-      <LayoutSelector />
+      <GuardedLayout />
     </GhibliProvider>
   );
 }

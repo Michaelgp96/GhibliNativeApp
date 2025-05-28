@@ -1,75 +1,64 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// app/(tabs)/index.tsx
+import React, { useContext } from 'react';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import { useAuth } from '../../src/Contexto/GhibliContext'; // Ajusta la ruta
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function PeliculasScreen() {
+  const { films, loadingFilms, errorFilms } = useAuth();
+  const router = useRouter();
 
-export default function HomeScreen() {
+  if (loadingFilms) {
+    return <View style={styles.loaderContainer}><ActivityIndicator size="large" color="#81d4fa" /></View>;
+  }
+  if (errorFilms) {
+    return <View style={styles.loaderContainer}><Text style={styles.errorText}>Error: {errorFilms}</Text></View>;
+  }
+  if (!films || films.length === 0) {
+    return <View style={styles.loaderContainer}><Text style={styles.errorText}>No se encontraron películas.</Text></View>;
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.mainContainer}>
+      <FlatList
+        data={films}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.listContentContainer}
+        ListHeaderComponent={<Text style={styles.mainTitle}>Películas Ghibli</Text>}
+        renderItem={({ item }) => (
+          <TouchableOpacity 
+            style={styles.card} 
+            // onPress={() => router.push(`/detalle-pelicula/${item.id}`)} // Para cuando tengas la ruta de detalle
+          >
+            <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
+            <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+            {item.release_date && <Text style={styles.cardYear}>{item.release_date}</Text>}
+          </TouchableOpacity>
+        )}
+      />
+    </View>
   );
 }
-
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  mainContainer: { flex: 1, backgroundColor: '#121212' },
+  listContentContainer: { paddingHorizontal: 8, paddingTop: 10, paddingBottom: 80 }, // Padding para el menú
+  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212'},
+  errorText: { color: '#ff6b6b', textAlign: 'center', fontSize: 16 },
+  mainTitle: { fontSize: 28, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 20, marginTop: 15 },
+  card: {
+    flex: 1,
+    margin: 7,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 10,
+    overflow: 'hidden',
+    elevation: 3, // Sombra para Android
+    shadowColor: '#000', // Sombra para iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  cardImage: { width: '100%', height: 220 }, // Ajusta altura
+  cardTitle: { color: '#e0e0e0', fontSize: 15, fontWeight: '600', textAlign: 'center', paddingHorizontal: 5, paddingVertical: 10, minHeight: 50 },
+  cardYear: { color: '#a0a0a0', fontSize: 12, textAlign: 'center', paddingBottom: 10 },
 });
